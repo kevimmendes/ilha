@@ -1,0 +1,60 @@
+{
+  "name": "ilha",
+  "version": "0.1.0",
+  "description": "Ilha — uma ilhota para suas IAs: monitor de agentes de código + assistente de voz, no topo da tela.",
+  "main": "electron/main.js",
+  "homepage": "https://github.com/ilha-app/ilha",
+  "scripts": {
+    "preview": "node server.js",
+    "test": "node test/smoke.js",
+    "start": "electron .",
+    "dist:linux": "electron-builder --linux",
+    "dist:win": "electron-builder --win",
+    "dist:win-installer": "electron-builder --win nsis",
+    "dist": "electron-builder --linux --win"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^45.2.1",
+    "electron-builder": "^26.18.0",
+    "jsdom": "^30.1.3"
+  },
+  "build": {
+    "appId": "com.ilha.desktop",
+    "productName": "Ilha",
+    "artifactName": "${productName}-${version}-${os}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "styles.css",
+      "js/**/*",
+      "electron/**/*",
+      "README.md"
+    ],
+    "linux": {
+      "target": [
+        { "target": "AppImage", "arch": ["x64"] },
+        { "target": "deb", "arch": ["x64"] }
+      ],
+      "category": "Utility",
+      "synopsis": "Monitor de agentes de IA + assistente de voz no topo da tela",
+      "maintainer": "Ilha <ilha@localhost>",
+      "executableName": "ilha"
+    },
+    "win": {
+      "target": [
+        { "target": "portable", "arch": ["x64"] },
+        { "target": "zip", "arch": ["x64"] }
+      ]
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false,
+      "shortcutName": "Ilha"
+    }
+  }
+}

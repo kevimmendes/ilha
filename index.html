@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ilha · uma ilhota para suas IAs</title>
+  <meta name="description" content="Ilha — Dynamic Island para Windows: acompanhe Claude Code e Codex no topo da tela e use comandos de voz." />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%237c5cff'/%3E%3Cstop offset='1' stop-color='%2322d3ee'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='18' fill='%230b0b0f'/%3E%3Ccircle cx='32' cy='32' r='14' fill='url(%23g)'/%3E%3C/svg%3E" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <!-- ============ Desktop de demonstração ============ -->
+  <div class="desktop" id="desktop">
+    <div class="wallpaper"></div>
+
+    <!-- Janela: terminal do agente -->
+    <section class="window win-terminal" id="winTerminal" aria-label="Terminal do agente">
+      <header class="win-bar">
+        <span class="win-dots"><i class="d red"></i><i class="d yellow"></i><i class="d green"></i></span>
+        <span class="win-title">terminal — claude code</span>
+        <span class="win-badge" id="termBadge">demo</span>
+      </header>
+      <div class="win-body mono" id="term" role="log" aria-live="off"></div>
+    </section>
+
+    <!-- Janela: bloco de notas (alvo do ditado) -->
+    <section class="window win-note" id="winNote" aria-label="Bloco de notas">
+      <header class="win-bar">
+        <span class="win-dots"><i class="d red"></i><i class="d yellow"></i><i class="d green"></i></span>
+        <span class="win-title">rascunho.md — bloco de notas</span>
+        <span class="win-badge">ditado</span>
+      </header>
+      <div class="win-body">
+        <div
+          class="note-body"
+          id="note"
+          contenteditable="true"
+          spellcheck="false"
+          role="textbox"
+          aria-label="Área de texto para ditado"
+        ># Rascunho
+
+Clique aqui e use <b>Alt+R</b> para ditar. O texto aparece nesta nota.
+
+- Reunião às 15h com o time
+- Revisar PR de autenticação</div>
+      </div>
+    </section>
+
+    <!-- Relógio estilo bandeja -->
+    <div class="tray">
+      <span class="tray-date" id="trayDate"></span>
+      <span class="tray-time" id="trayTime"></span>
+    </div>
+
+    <!-- Dica inicial -->
+    <div class="hint" id="hint">
+      <b>Ilha</b> · clique na ilha para expandir · <kbd>Alt</kbd>+<kbd>R</kbd> para falar
+      <button class="hint-close" id="hintClose" aria-label="Fechar dica">×</button>
+    </div>
+  </div>
+
+  <!-- ============ A ilha (Dynamic Island) ============ -->
+  <div class="island-wrap" id="islandWrap">
+    <!-- pílula de transcrição ao vivo -->
+    <div class="voice-pill" id="voicePill" hidden>
+      <span class="voice-dot"></span>
+      <span class="voice-text" id="voiceText">ouvindo…</span>
+    </div>
+
+    <div class="island" id="island" data-state="collapsed" role="region" aria-label="Ilha">
+      <!-- ---- estado recolhido ---- -->
+      <button class="isl-collapsed" id="islCollapsed" aria-label="Expandir a Ilha">
+        <span class="orb" id="orb" data-mode="idle">
+          <span class="orb-ring"></span>
+          <span class="orb-face"><i class="eye"></i><i class="eye"></i></span>
+        </span>
+        <span class="collapsed-copy">
+          <span class="collapsed-agent" id="collapsedAgent">Claude Code</span>
+          <span class="collapsed-status" id="collapsedStatus">pronto para observar</span>
+        </span>
+        <span class="gauge" id="gauge" title="Uso do plano">
+          <svg viewBox="0 0 36 36" aria-hidden="true">
+            <circle class="gauge-track" cx="18" cy="18" r="15.5"></circle>
+            <circle class="gauge-fill" id="gaugeFill" cx="18" cy="18" r="15.5"></circle>
+          </svg>
+          <span class="gauge-num" id="gaugeNum">0%</span>
+        </span>
+      </button>
+
+      <!-- ---- estado expandido ---- -->
+      <div class="isl-expanded" id="islExpanded" aria-hidden="true">
+        <header class="isl-head">
+          <div class="isl-brand">
+            <span class="orb orb-sm" id="orb2" data-mode="idle">
+              <span class="orb-ring"></span>
+              <span class="orb-face"><i class="eye"></i><i class="eye"></i></span>
+            </span>
+            <span class="brand-copy">
+              <span class="brand-name">Ilha</span>
+              <span class="brand-sub" id="brandSub">uma ilhota para suas IAs</span>
+            </span>
+          </div>
+          <div class="isl-head-actions">
+            <span class="chip" id="agentChip">Claude Code</span>
+            <button class="icon-btn" id="btnCollapse" aria-label="Recolher a Ilha" title="Recolher">−</button>
+          </div>
+        </header>
+
+        <div class="isl-status" id="islStatus">
+          <span class="spinner" id="islSpinner" aria-hidden="true"></span>
+          <span class="isl-status-text" id="islStatusText">observando a sessão…</span>
+          <span class="isl-timer" id="islTimer" hidden></span>
+        </div>
+
+        <div class="evt-list" id="evtList" tabindex="0" aria-label="Atividade do agente"></div>
+
+        <div class="usage-block">
+          <div class="usage-row">
+            <span class="usage-label">Contexto do agente</span>
+            <span class="usage-value" id="usageText">0% · 0k/80k</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="usageFill"></div></div>
+          <div class="usage-row usage-row-sub">
+            <span class="usage-label">Limite do plano</span>
+            <span class="usage-value" id="planText">0% · reseta em 4h</span>
+          </div>
+          <div class="bar bar-sub"><div class="bar-fill bar-fill-plan" id="planFill"></div></div>
+        </div>
+
+        <footer class="isl-foot">
+          <button class="mic-btn" id="micBtn" aria-label="Ativar ditado por voz" title="Falar (Alt+R)">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="22"></line>
+            </svg>
+          </button>
+          <input
+            class="cmd-input"
+            id="cmdInput"
+            type="text"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="Digite um comando ou toque no microfone…"
+            aria-label="Comando"
+          />
+          <kbd class="foot-kbd">Alt+R</kbd>
+        </footer>
+      </div>
+    </div>
+
+    <!-- toast abaixo da ilha -->
+    <div class="toast" id="toast" hidden></div>
+  </div>
+
+  <script src="js/agents.js"></script>
+  <script src="js/voice.js"></script>
+  <script src="js/island.js"></script>
+  <script src="js/desktop.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
