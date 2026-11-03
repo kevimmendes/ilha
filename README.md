@@ -1,5 +1,7 @@
 # Ilha 🏝️
 
+**Baixar:** [Linux (AppImage + .deb)](https://github.com/kevimmendes/ilha/releases/tag/v0.1.0-linux) · [Windows (portátil .exe + .zip)](https://github.com/kevimmendes/ilha/releases/tag/v0.1.0-win) — binários não assinados, ver notas de cada release.
+
 **Uma ilhota para suas IAs** — um utilitário de desktop no estilo *Dynamic Island*,
 inspirado no [TwoCode](https://twocode.nl/) (monitor do Claude Code/Codex) e no
 [Nixi](https://heynixi.app/) (assistente de voz no topo da tela).
